@@ -89,8 +89,8 @@ saxpyCuda(int N, float alpha, float* xarray, float* yarray, float* resultarray) 
 
     double overallDuration = endTime - startTime;
     double overallComputeDuration = endKernelTime - startKernelTime;
-    printf("Comput time: %.3f ms\n", 1000.f * overallDuration);
-    printf("Overall time: %.3f ms\t\t[%.3f GB/s]\n", 1000.f * overallComputeDuration, toBW(totalBytes, overallDuration));
+    printf("Comput time: %.3f ms\n", 1000.f * overallComputeDuration);
+    printf("Overall time: %.3f ms\t\t[%.3f GB/s]\n", 1000.f * overallDuration, toBW(totalBytes, overallDuration));
 
     //
     // TODO free memory buffers on the GPU
