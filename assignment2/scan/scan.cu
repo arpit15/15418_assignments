@@ -28,6 +28,26 @@ static inline int nextPow2(int n)
     return n;
 }
 
+
+__global__ void
+scan_unsweep_kernel(int* result, int twod, int twod1){
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+    if (index < N)
+       result[index + twod1 - 1] = result[index + twod - 1];
+}
+
+
+__global__ void
+scan_downsweep_kernel(int* result, int twod, int twod1){
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+    if (index < N){
+        int t= result[i +twod -1];
+       result[index + twod - 1] = result[index + twod1 - 1];
+       result[i + twod1 -1] += t;
+   }
+}
+
+
 void exclusive_scan(int* device_start, int length, int* device_result)
 {
     /* Fill in this function with your exclusive scan implementation.
@@ -39,6 +59,24 @@ void exclusive_scan(int* device_start, int length, int* device_result)
      * both the input and the output arrays are sized to accommodate the next
      * power of 2 larger than the input.
      */
+    int N = length;
+    memmove(device_result, device_start, N*sizeof(int));
+    //unsweep phase
+    for(int twod=1; twod<N; twod*=2){
+        int twod1 = twod*2;
+        scan_unsweep_kernel<<1, N>>(device_result, twod, twod1);
+    }
+
+    device_result[N-1] = 0;
+
+
+    //downsweep phase
+    for(int twod=N/2; twod>=1; twod/=2){
+        int twod1 = twod*2;
+        scan_downsweep_kernel<<1, N>>(device_result, twod, twod1);
+    }
+
+
 }
 
 /* This function is a wrapper around the code you will write - it copies the
