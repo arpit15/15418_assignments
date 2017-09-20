@@ -30,7 +30,7 @@ static inline int nextPow2(int n)
 
 
 __global__ void
-scan_unsweep_kernel(int* result, int twod, int twod1){
+scan_unsweep_kernel(int N, int* result, int twod, int twod1){
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     if (index < N)
        result[index + twod1 - 1] = result[index + twod - 1];
@@ -38,12 +38,12 @@ scan_unsweep_kernel(int* result, int twod, int twod1){
 
 
 __global__ void
-scan_downsweep_kernel(int* result, int twod, int twod1){
+scan_downsweep_kernel(int N, int* result, int twod, int twod1){
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     if (index < N){
-        int t= result[i +twod -1];
+        int t= result[index +twod -1];
        result[index + twod - 1] = result[index + twod1 - 1];
-       result[i + twod1 -1] += t;
+       result[index + twod1 -1] += t;
    }
 }
 
@@ -64,7 +64,7 @@ void exclusive_scan(int* device_start, int length, int* device_result)
     //unsweep phase
     for(int twod=1; twod<N; twod*=2){
         int twod1 = twod*2;
-        scan_unsweep_kernel<<1, N>>(device_result, twod, twod1);
+        scan_unsweep_kernel<<<1, N>>>(N, device_result, twod, twod1);
     }
 
     device_result[N-1] = 0;
@@ -73,7 +73,7 @@ void exclusive_scan(int* device_start, int length, int* device_result)
     //downsweep phase
     for(int twod=N/2; twod>=1; twod/=2){
         int twod1 = twod*2;
-        scan_downsweep_kernel<<1, N>>(device_result, twod, twod1);
+        scan_downsweep_kernel<<<1, N>>>(N, device_result, twod, twod1);
     }
 
 
